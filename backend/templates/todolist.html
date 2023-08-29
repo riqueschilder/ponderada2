@@ -1,19 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todo List</title>
 </head>
 <body>
-    <h1>Todo List</h1>
-    <p>Welcome, {{ username }}!</p>
-    <form method="POST">
-        <input type="text" name="todo" placeholder="Todo">
+    <h1>Welcome, {{ username }}!</h1>
+    
+    <form action="/todolist" method="post">
+        <input type="text" name="todo" placeholder="New Todo" required>
         <button type="submit">Add</button>
     </form>
+    
     <ul>
         {% for todo in todos %}
-        <li>{{ todo.todo }}</li>
+        <li>
+            <span class="todo-text">{{ todo.todo }}</span>
+            <button class="edit-button" data-todo-id="{{ todo.id }}">Edit</button>
+            <button class="delete-button" data-todo-id="{{ todo.id }}">Delete</button>
+        </li>
         {% endfor %}
     </ul>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.edit-button');
+            editButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const todoId = button.getAttribute('data-todo-id');
+                    const todoTextElement = button.previousElementSibling;
+                    const todoText = todoTextElement.textContent;
+                    const newText = prompt('Edit Todo:', todoText);
+                    if (newText !== null) {
+                        fetch(`/edit/${todoId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ newText: newText }),
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                todoTextElement.textContent = newText;
+                            }
+                        });
+                    }
+                });
+            });
+            
+            const deleteButtons = document.querySelectorAll('.delete-button');
+            deleteButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const todoId = button.getAttribute('data-todo-id');
+                    fetch(`/delete/${todoId}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            button.parentNode.remove();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>
